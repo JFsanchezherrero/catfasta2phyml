@@ -244,27 +244,26 @@ foreach my $file (keys %HoH) {
 
     my @base_name = split("/", $file);
     my @name = split(".fa", $base_name[-1]);
-
-   # my @name = split(".fa", $file);
-	
 	if ($Noprottest) {
-		
 		print PART "$Model_partition, ".$name[0]." = "."$start_position"."-"."$end_position\n";
-	} else {
 	
+	} else {
+		
+		print "Checking fitting model in $file...\n";		
 		## add system call to java -jar prottest-3.4.2.jar -i $file
 		my $output_tmp = $tmp_part."/".$name[0]."_tmp.txt";
 		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp);
 		if ($system_call == 1) {print "Error when calling ProtTest java jar file...\n"; exit(); }
 		my $best_model;
 		open (OUT, "<$output_tmp");
-		while (<>) {
+		while (<OUT>) {
 			chomp;
 			if ($_ =~ /Best model according to BIC: (.*)/) {
 				$best_model = $1; last;
 		}}
 		close (OUT);
 		print PART "$conversion{$best_model}, ".$name[0]." = "."$start_position"."-"."$end_position\n";
+		print "Done...\n";
 	}
 	$start_position += $length;
 }
