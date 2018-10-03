@@ -59,9 +59,9 @@ my $noprint          = 0;    # Do not print the concatenation
 my $sequential       = 0;    # Print sequential with line breaks in in sequence (default is interleaved) 
 my $strict_phylip    = 0;    # Print strict phylip format (http://evolution.genetics.washington.edu/phylip/doc/sequence.html)
 my $lwidth           = 60;   # default line width for fasta
-my $prottest_jar_file = 0;
-my $Noprottest;
-my $Model_partition;
+
+## added
+my $prottest_jar_file; my $Noprottest; my $Model_partition; my $output_file;
 
 #---------------------------------------------------------------------------
 #  Handle arguments
@@ -81,6 +81,7 @@ else {
                'protest_jar=s'	  => \$prottest_jar_file,
                'noProtTest'		  => \$Noprottest,
                'model_partition=s'  => \$Model_partition,
+               'output_file=s' 		=> \$output_file,
               );
 }
 
@@ -253,7 +254,7 @@ foreach my $file (keys %HoH) {
 		print "Checking fitting model in $file...\n";		
 		## add system call to java -jar prottest-3.4.2.jar -i $file
 		my $output_tmp = $tmp_part."/".$name[0]."_tmp.txt";
-		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp." 2> ".$output_tmp.".log");
+		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp);
 		if ($system_call == 1) {print "Error when calling ProtTest java jar file...\n"; exit(); }
 		my $best_model;
 		open (OUT, "<$output_tmp");
@@ -264,31 +265,31 @@ foreach my $file (keys %HoH) {
 		}}
 		close (OUT);
 		print PART "$conversion{$best_model}, ".$name[0]." = "."$start_position"."-"."$end_position\n";
-		print "Done...\n";
+		print "Done...\n\n\n########################################\n";
 	}
 	$start_position += $length;
 }
 close (PART);
 
 #---------------------------------------------------------------------------
-#  Print everything to STDOUT
+#  Print everything to OUT_F
 #---------------------------------------------------------------------------
-if ($verbose) {
-    print STDERR "\nChecked $nfiles files -- sequence labels and lengths seems OK.\n";
-    print STDERR "Concatenated $nseq sequences, total length $nchar.\n";
-    print STDERR "Printing concatenation to STDOUT.\n\n" unless $noprint;
-}
+print  "\nChecked $nfiles files -- sequence labels and lengths seems OK.\n";
+print  "Concatenated $nseq sequences, total length $nchar.\n";
+print  "Printing concatenation to file $output_file.\n\n";
 
 if ($noprint) {
     print STDERR "\n\nEnd of script.\n\n" if ($verbose);
     exit(1);
 }
 
+open (OUT_F, ">$output_file");
+
 if ($strict_phylip) {
-    print STDOUT "   $nseq    $nchar\n";
+    print OUT_F "   $nseq    $nchar\n";
 }
 else {
-    print STDOUT "$nseq $nchar\n" unless $fasta;
+    print OUT_F "$nseq $nchar\n" unless $fasta;
 }
 
 
@@ -309,19 +310,19 @@ if ($fasta or $sequential) {
     ## Then print, and add line breaks in sequences
     foreach my $label (sort keys  %print_hash) {
         if ($fasta) {
-            print STDOUT ">$label\n";
+            print OUT_F ">$label\n";
             $print_hash{$label} =~ s/\S{$lwidth}/$&\n/gs; # replace word of size $lwidth with itself and "\n"
-            print STDOUT $print_hash{$label}, "\n";
+            print OUT_F $print_hash{$label}, "\n";
         }
         elsif ($strict_phylip) {
             my $phylip_label = phylip_label($label);
-            printf STDOUT "%-10s ", $phylip_label;
+            printf OUT_F "%-10s ", $phylip_label;
             my $s = phylip_blocks($print_hash{$label});
             print $s, "\n";
         }
         else {
-            printf STDOUT "%-${space}s ", $label;
-            print STDOUT $print_hash{$label}, "\n";
+            printf OUT_F "%-${space}s ", $label;
+            print OUT_F $print_hash{$label}, "\n";
         }
     }
 }
@@ -338,23 +339,26 @@ else { # default: phyml interleaved
             ##    }
             if ($strict_phylip) {
                 my $phylip_seqid = phylip_label($seqid);
-                print STDOUT $phylip_seqid unless $did_first;
+                print OUT_F $phylip_seqid unless $did_first;
                 ##my $s = phylip_blocks($HoH{$file}{'seqs'}{$seqid}); # 09/08/2015 01:58:15 PM: does not work with the sequence
-                ##print STDOUT $s, "\n";
+                ##print OUT_F $s, "\n";
             }
             else {
-                printf STDOUT "%-${space}s ", $seqid unless $did_first;
-                ##print STDOUT "$HoH{$file}{'seqs'}{$seqid}\n";
+                printf OUT_F "%-${space}s ", $seqid unless $did_first;
+                ##print OUT_F "$HoH{$file}{'seqs'}{$seqid}\n";
             }
             ## Print sequence
             ## TODO: phylip strict printing of sequence in blocks of 10
             ## TODO: print length of 60
-            print STDOUT "$HoH{$file}{'seqs'}{$seqid}\n"; # <<<<<<<<<<<<
+            print OUT_F "$HoH{$file}{'seqs'}{$seqid}\n"; # <<<<<<<<<<<<
         }
         print "\n";
         $did_first = 1;
     } 
 }
+close (OUT_F);
+rmdir $tmp_part;
+rmdir "snapshot";
 
 print STDERR "\nEnd of script.\n\n" if ($verbose);
 
@@ -563,6 +567,9 @@ Print output in sequential format. Default is interleaved.
 
 Be verbose by showing some useful output. See the combination with B<-n>.
 
+=item B<-v, --verbose>
+File to print alignment concatenated.
+
 
 =item B<-n, --noprint>
 
@@ -592,7 +599,7 @@ This version is intended to generate a phylip file with as many partitions as al
 
 Please refer to https://github.com/nylander/catfasta2phyml for further details of the original file.
 	
-The original catfasta2phyml.pl will concatenate FASTA alignments to one file (interleaved PHYML or FASTA format) after checking that all sequences are aligned (of same length). If there are sequence labels that are not present in all files, a warning will be issued. Sequenced can, however, still be concatenated (and missing sequences be filled with missing data (gaps)) if the argument --concatenate is used.     Prints to STDOUT.
+The original catfasta2phyml.pl will concatenate FASTA alignments to one file (interleaved PHYML or FASTA format) after checking that all sequences are aligned (of same length). If there are sequence labels that are not present in all files, a warning will be issued. Sequenced can, however, still be concatenated (and missing sequences be filled with missing data (gaps)) if the argument --concatenate is used.     Prints to output file specified.
 
 =head1 USAGE
 
