@@ -78,9 +78,9 @@ else {
                'n|noprint'        => \$noprint,
                's|sequential'     => \$sequential,
                'p|phylip'         => \$strict_phylip,
-               'protest_jar'	  => \$prottest_jar_file,
+               'protest_jar=s'	  => \$prottest_jar_file,
                'noProtTest'		  => \$Noprottest,
-               'model_partition'  => \$Model_partition,
+               'model_partition=s'  => \$Model_partition,
               );
 }
 
@@ -199,7 +199,7 @@ my $start_position=1;
 my $partition_file = "partitions.txt";
 open (PART, ">$partition_file");
 
-my $tmp_part = "tmp_folder";
+my $tmp_part = "./tmp_folder";
 mkdir $tmp_part, 0755;
 
 ## Proteins models available in IQTREE
@@ -241,7 +241,11 @@ foreach my $file (keys %HoH) {
 	#===============================================================================
     ## print partitions
     my $end_position=$start_position+$length-1;
-    my @name = split(".fa", $file);
+
+    my @base_name = split("/", $file);
+    my @name = split(".fa", $base_name[-1]);
+
+   # my @name = split(".fa", $file);
 	
 	if ($Noprottest) {
 		
