@@ -5,6 +5,13 @@
 ## TODO: print strict PHYLIP output if not -s
 ##   ./catfasta2phyml-branch.pl -v -c -p testing2/* > outfile
 
+# 	Update: 09/05/2018 
+#  	DESCRIPTION:  add RAXML partition file
+#	AUTHOR:	 Jose F. Sanchez herrero
+
+#	Update: 10/03/2018 
+#	DESCRIPTION:  Add ProtTest for best model selection for each aln added to the partition
+#	AUTHOR:	 Jose F. Sanchez herrero
 
 use strict;
 use warnings;
@@ -52,7 +59,7 @@ my $noprint          = 0;    # Do not print the concatenation
 my $sequential       = 0;    # Print sequential with line breaks in in sequence (default is interleaved) 
 my $strict_phylip    = 0;    # Print strict phylip format (http://evolution.genetics.washington.edu/phylip/doc/sequence.html)
 my $lwidth           = 60;   # default line width for fasta
-
+my $prottest_jar_file = 0;
 
 #---------------------------------------------------------------------------
 #  Handle arguments
@@ -69,6 +76,9 @@ else {
                'n|noprint'        => \$noprint,
                's|sequential'     => \$sequential,
                'p|phylip'         => \$strict_phylip,
+               'protest_jar'	  => \$prottest_jar_file,
+               'noProtTest'		  => \$Noprottest,
+               'model_partition'  => \$Model_partition,
               );
 }
 
@@ -191,7 +201,6 @@ foreach my $file (keys %HoH) {
     my $length = ($HoH{$file}{'nchars'});
     $nchar = $nchar + $length;
 
-
 	#===  FUNCTION  ================================================================
 	#      VERSION:  09/05/2018 
 	#  DESCRIPTION:  add RAXML partition file
@@ -200,8 +209,14 @@ foreach my $file (keys %HoH) {
     ## print partitions
     my $end_position=$start_position+$length-1;
     my @name = split(".fa", $file);
-	print PART "AA, ".$name[0]." = "."$start_position"."-"."$end_position\n";
+	
+	## add system call to java -jar prottest-3.4.2.jar -i $file
+	
+	my $best_model;
+	print PART "$best_model, ".$name[0]." = "."$start_position"."-"."$end_position\n";
+	
 	$start_position += $length;
+	
 }
 close (PART);
 
@@ -447,12 +462,11 @@ sub phylip_blocks {
 
 =head1 NAME
 
-catfasta2phyml.pl -- Concatenate FASTA alignments to PHYML, PHYLIP, or FASTA format
-
+catfasta2phyml_raxmlPartitions.pl -- Concatenate FASTA alignments PHYLIP, generates partition for RaXML and estimates best model test fitting each partition.
 
 =head1 SYNOPSIS
 
-catfasta2phyml.pl [options] [files]
+catfasta2phyml_raxmlPartitions.pl [options] [files]
 
 
 =head1 OPTIONS
@@ -505,50 +519,48 @@ Be verbose by showing some useful output. See the combination with B<-n>.
 Do not print the concatenation, just check if all files have the same sequence lables and lengths.
 Program returns 1 on exit. See also the combination with B<-v>.
 
+=item B<-protest_jar>
+
+Java jar file for ProtTest3 (https://github.com/ddarriba/prottest3) in order to generate best model fitting alingment for each partition.
+
+=item B<-noProtTest>
+
+Do not estimate model for each partition. Adds -model_partition [string] to every partition generated in RaXML partition format style.
+
+=item B<-model_partition>
+
+Option provided will be added to every partition generated in RaXML partition format style.
+
+
 
 =back
 
 =head1 DESCRIPTION
 
-B<catfasta2phyml.pl> will concatenate FASTA alignments to one file
-(interleaved PHYML or FASTA format) after checking that all sequences
-are aligned (of same length). If there are sequence labels that are not
-present in all files, a warning will be issued. Sequenced can, however,
-still be concatenated (and missing sequences be filled with missing data
-(gaps)) if the argument B<--concatenate> is used.
+This is a modification of the original script written by Johan A. A. Nylander, catfasta2phym.pl.
 
-Prints to B<STDOUT>.
+This version is intended to generate a phylip file with as many partitions as alignments provided each one containing the best protein model that fits according to ProtTest3.
 
+Please refer to https://github.com/nylander/catfasta2phyml for further details of the original file.
+	
+The original catfasta2phyml.pl will concatenate FASTA alignments to one file (interleaved PHYML or FASTA format) after checking that all sequences are aligned (of same length). If there are sequence labels that are not present in all files, a warning will be issued. Sequenced can, however, still be concatenated (and missing sequences be filled with missing data (gaps)) if the argument --concatenate is used.     Prints to STDOUT.
 
 =head1 USAGE
 
-To concatenate fasta files to a phyml readable format:
+Please refere to https://github.com/nylander/catfasta2phyml for the original file and original options.
 
-    catfasta2phyml.pl file1.fas file2.fas > out.phy
-    catfasta2phyml.pl *.fas > out.phy
-    catfasta2phyml.pl --sequential *.fas > out.phy
-    catfasta2phyml.pl --verbose *.fas > out.phy
+To concatenate fasta files to a phyml readable format, generate a partition for each fasta file provided and estimate the best fitting model test.
 
-To concatenate fasta files to fasta format:
+        catfasta2phyml.pl -p file*.fas -prottest_jar /path/to/prottest_bin/prottest_java_file.jar >> out.phy
+        
+To concatenate fasta files to a phyml readable format but do not generate a partition for each fasta.
 
-    catfasta2phyml.pl -f file1.fas file2.fas > out.fasta
-    catfasta2phyml.pl -f *.fas > out.fasta
-
-To check fasta alignments
-
-    catfasta2phyml.pl --noprint --verbose *.fas
-    catfasta2phyml.pl -nv *.fas
-    catfasta2phyml.pl -n *.fas
-
-
-To concatenate fasta files, while filling in missing taxa
-
-    catfasta2phyml.pl --concatenate --verbose *.fas
-
+        catfasta2phyml.pl -p file*.fas -noProtTest -model_partition LG
 
 =head1 AUTHOR
 
 Written by Johan A. A. Nylander
+Modified by Jose F. Sanchez Herrero (2018)
 
 
 =head1 DEPENDENCIES
@@ -575,7 +587,7 @@ http://www.gnu.org/copyleft/gpl.html
 =head1 DOWNLOAD
 
 https://github.com/nylander/catfasta2phyml
-
+https://github.com/JFsanchezherrero/catfasta2phyml
 
 =cut
 

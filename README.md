@@ -3,12 +3,12 @@ catfasta2phyml
 
 NAME
 
-    catfasta2phyml.pl -- Concatenate FASTA alignments to PHYML, PHYLIP, or
-    FASTA format
+    catfasta2phyml_raxmlPartitions.pl -- Concatenate FASTA alignments PHYLIP, generates partition for 
+    RaXML and estimates best model test fitting each partition.
 
 SYNOPSIS
 
-    catfasta2phyml.pl [options] [files]
+    catfasta2phyml_raxmlPartitions.pl [options] [files]
 
 OPTIONS
 
@@ -47,9 +47,31 @@ OPTIONS
             same sequence lables and lengths. Program returns 1 on exit. See
             also the combination with -v.
 
+	-protest_jar
+			Java jar file for ProtTest3 (https://github.com/ddarriba/prottest3)
+			in order to generate best model fitting alingment for each partition.
+	
+	-noProtTest
+			Do not estimate model for each partition. Adds -model_partition [string] 
+			to every partition generated.
+	
+	-model_partition            
+			String provided will be 
+            
+
 DESCRIPTION
 
-    catfasta2phyml.pl will concatenate FASTA alignments to one file
+	This is a modification of the original script written by Johan A. A. Nylander, 
+	catfasta2phym.pl.
+	
+	This version is intended to generate a phylip file with as many partitions as
+	alignments provided each one containing the best protein model that fits according
+	to ProtTest3.
+
+	Please refer to https://github.com/nylander/catfasta2phyml for further details
+	of the original file.
+	
+	The original catfasta2phyml.pl will concatenate FASTA alignments to one file
     (interleaved PHYML or FASTA format) after checking that all sequences
     are aligned (of same length). If there are sequence labels that are not
     present in all files, a warning will be issued. Sequenced can, however,
@@ -60,31 +82,23 @@ DESCRIPTION
 
 USAGE
 
-    To concatenate fasta files to a phyml readable format:
+	Please refer to https://github.com/nylander/catfasta2phyml for the original file
+	and original options.
 
-        catfasta2phyml.pl file1.fas file2.fas > out.phy
-        catfasta2phyml.pl *.fas > out.phy
-        catfasta2phyml.pl --sequential *.fas > out.phy
-        catfasta2phyml.pl --verbose *.fas > out.phy
+    To concatenate fasta files to a phyml readable format, generate a partition for 
+    each fasta file provided and estimate the best fitting model test.
 
-    To concatenate fasta files to fasta format:
+        catfasta2phyml.pl -p file*.fas -prottest_jar /path/to/prottest_bin/prottest_java_file.jar >> out.phy
+        
+	To concatenate fasta files to a phyml readable format but do not generate a partition 
+	for each fasta.
 
-        catfasta2phyml.pl -f file1.fas file2.fas > out.fasta
-        catfasta2phyml.pl -f *.fas > out.fasta
-
-    To check fasta alignments:
-
-        catfasta2phyml.pl --noprint --verbose *.fas
-        catfasta2phyml.pl -nv *.fas
-        catfasta2phyml.pl -n *.fas
-
-    To concatenate fasta files, while filling in missing taxa:
-
-        catfasta2phyml.pl --concatenate --verbose *.fas
+        catfasta2phyml.pl -p file*.fas -noProtTest -model_partition LG
 
 AUTHOR
 
     Written by Johan A. A. Nylander
+    Modified by Jose F. Sanchez Herrero (2018)
 
 DEPENDENCIES
 
@@ -108,4 +122,5 @@ LICENSE AND COPYRIGHT
 DOWNLOAD
 
     https://github.com/nylander/catfasta2phyml
+    https://github.com/JFsanchezherrero/catfasta2phyml
 
