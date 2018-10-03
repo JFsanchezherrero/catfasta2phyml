@@ -199,6 +199,37 @@ my $start_position=1;
 my $partition_file = "partitions.txt";
 open (PART, ">$partition_file");
 
+my $tmp_part = "tmp_folder";
+mkdir $tmp_part, 0755;
+
+## Proteins models available in IQTREE
+# LG, DCMut, mtMAM, JTT, mtREV, cpREV, Dayhoff, WAG, mtART, rtREV, VT, HIVb, FLU, Blosum62, HIVw,
+# PMB, JTTDCMut, GTR20, mtMet, mtVer, mtInv, Poisson, mtZOA,
+
+# ProtTest: Include matrix (Amino-acid) = JTT LG DCMut MtREV MtMam MtArt Dayhoff WAG RtREV CpREV Blosum62 VT HIVb HIVw FLU 
+
+## Share ProtTest and IQTREE: ATTENTION, different names!
+# LG, DCMut, mtMAM, JTT, mtREV, mtART, cpREV, Dayhoff, WAG, rtREV,  VT, HIVb, FLU, Blosum62, HIVw,
+
+## parse $output_tmp
+my %conversion = (
+## prottest => IQTREE
+	'LG' => "LG",
+	'JTT' => "JTT",
+	'DCMut' => "DCMut",
+	'MtREV' => "mtREV",
+	'MtMam' => "mtMAM",
+	'MtArt' => "mtART",			
+	'Dayhoff' => "Dayhoff",
+	'WAG' => "WAG",
+	'RtREV' => "rtREV",			
+	'VT' => "VT",			
+	'HIVb' => "HIVw",			
+	'Blosum62' => "Blosum62",			
+	'CpREV' => "cpREV",			
+	'RtREV' => "rtREV",			
+);
+
 foreach my $file (keys %HoH) {
     my $length = ($HoH{$file}{'nchars'});
     $nchar = $nchar + $length;
@@ -212,13 +243,26 @@ foreach my $file (keys %HoH) {
     my $end_position=$start_position+$length-1;
     my @name = split(".fa", $file);
 	
-	## add system call to java -jar prottest-3.4.2.jar -i $file
+	if ($Noprottest) {
+		
+		print PART "$Model_partition, ".$name[0]." = "."$start_position"."-"."$end_position\n";
+	} else {
 	
-	my $best_model;
-	print PART "$best_model, ".$name[0]." = "."$start_position"."-"."$end_position\n";
-	
+		## add system call to java -jar prottest-3.4.2.jar -i $file
+		my $output_tmp = $tmp_part."/".$name[0]."_tmp.txt";
+		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp);
+		if ($system_call == 1) {print "Error when calling ProtTest java jar file...\n"; exit(); }
+		my $best_model;
+		open (OUT, "<$output_tmp");
+		while (<>) {
+			chomp;
+			if ($_ =~ /Best model according to BIC: (.*)/) {
+				$best_model = $1; last;
+		}}
+		close (OUT);
+		print PART "$conversion{$best_model}, ".$name[0]." = "."$start_position"."-"."$end_position\n";
+	}
 	$start_position += $length;
-	
 }
 close (PART);
 
