@@ -82,6 +82,11 @@ DESCRIPTION
 
 USAGE
 
+	This is a modification of the original script written by Johan A. A. Nylander, 
+	catfasta2phym.pl. This version is intended to generate a phylip file with as many 
+	partitions as alignments provided each one containing the best protein model that 
+	fits according to ProtTest3.
+	
 	Please refer to https://github.com/nylander/catfasta2phyml for the original file
 	and original options.
 

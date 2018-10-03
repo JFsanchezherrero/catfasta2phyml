@@ -60,6 +60,8 @@ my $sequential       = 0;    # Print sequential with line breaks in in sequence 
 my $strict_phylip    = 0;    # Print strict phylip format (http://evolution.genetics.washington.edu/phylip/doc/sequence.html)
 my $lwidth           = 60;   # default line width for fasta
 my $prottest_jar_file = 0;
+my $Noprottest;
+my $Model_partition;
 
 #---------------------------------------------------------------------------
 #  Handle arguments
@@ -532,7 +534,6 @@ Do not estimate model for each partition. Adds -model_partition [string] to ever
 Option provided will be added to every partition generated in RaXML partition format style.
 
 
-
 =back
 
 =head1 DESCRIPTION
@@ -546,6 +547,8 @@ Please refer to https://github.com/nylander/catfasta2phyml for further details o
 The original catfasta2phyml.pl will concatenate FASTA alignments to one file (interleaved PHYML or FASTA format) after checking that all sequences are aligned (of same length). If there are sequence labels that are not present in all files, a warning will be issued. Sequenced can, however, still be concatenated (and missing sequences be filled with missing data (gaps)) if the argument --concatenate is used.     Prints to STDOUT.
 
 =head1 USAGE
+
+This is a modification of the original script written by Johan A. A. Nylander, catfasta2phym.pl. This version is intended to generate a phylip file with as many partitions as alignments provided each one containing the best protein model that fits according to ProtTest3.
 
 Please refere to https://github.com/nylander/catfasta2phyml for the original file and original options.
 
