@@ -227,7 +227,8 @@ my %conversion = (
 	'HIVb' => "HIVw",			
 	'Blosum62' => "Blosum62",			
 	'CpREV' => "cpREV",			
-	'RtREV' => "rtREV",			
+	'RtREV' => "rtREV",	
+	'FLU' => "FLU"		
 );
 
 foreach my $file (keys %HoH) {
@@ -252,7 +253,7 @@ foreach my $file (keys %HoH) {
 		print "Checking fitting model in $file...\n";		
 		## add system call to java -jar prottest-3.4.2.jar -i $file
 		my $output_tmp = $tmp_part."/".$name[0]."_tmp.txt";
-		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp);
+		my $system_call = system("java -jar ".$prottest_jar_file." -i $file -o ".$output_tmp." 2> ".$output_tmp.".log");
 		if ($system_call == 1) {print "Error when calling ProtTest java jar file...\n"; exit(); }
 		my $best_model;
 		open (OUT, "<$output_tmp");
