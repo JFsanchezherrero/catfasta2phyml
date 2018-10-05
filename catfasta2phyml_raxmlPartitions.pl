@@ -1,9 +1,10 @@
 #!/usr/bin/perl 
-
+##	This is a modification of the original script written by Johan A. A. Nylander.
 
 ## 09/16/2015 04:57:30 PM
 ## TODO: print strict PHYLIP output if not -s
 ##   ./catfasta2phyml-branch.pl -v -c -p testing2/* > outfile
+## Credit: Johan A. A. Nylander,
 
 # 	Update: 09/05/2018 
 #  	DESCRIPTION:  add RAXML partition file
@@ -12,6 +13,8 @@
 #	Update: 10/03/2018 
 #	DESCRIPTION:  Add ProtTest for best model selection for each aln added to the partition
 #	AUTHOR:	 Jose F. Sanchez herrero
+
+## TODO: parallel implementation for each partition
 
 use strict;
 use warnings;
@@ -81,10 +84,12 @@ else {
                'protest_jar=s'	  => \$prottest_jar_file,
                'noProtTest'		  => \$Noprottest,
                'model_partition=s'  => \$Model_partition,
-               'output_file=s' 		=> \$output_file,
+               'o|output_file=s' 		=> \$output_file,
               );
 }
 
+if (!$strict_phylip) {$strict_phylip=1;}
+if (!$output_file) {$output_file="merge.phy";}
 
 #---------------------------------------------------------------------------
 #  Read all infiles, count labels and get sequence lengths

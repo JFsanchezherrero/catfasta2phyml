@@ -38,6 +38,9 @@ OPTIONS
     -s, --sequential
             Print output in sequential format. Default is interleaved.
 
+	-output_file
+			File to print alignment concatenated.
+
     -v, --verbose
             Be verbose by showing some useful output. See the combination
             with -n.
